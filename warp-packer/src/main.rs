@@ -84,12 +84,15 @@ fn patch_runner(arch: &str, exec_name: &str) -> io::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn create_tgz(dir: &Path, out: &Path) -> io::Result<()> {
+fn create_tgz(dirs: &Vec<&Path>, out: &Path) -> io::Result<()> {
     let f = fs::File::create(out)?;
     let gz = GzEncoder::new(f, Compression::best());
     let mut tar = tar::Builder::new(gz);
     tar.follow_symlinks(false);
-    tar.append_dir_all(".", dir)?;
+    for dir in dirs.iter() {
+        println!("Compressing input directory {:?}...", dir);
+        tar.append_dir_all(".", dir)?;
+    }
     Ok(())
 }
 
@@ -120,6 +123,14 @@ fn create_app(runner_buf: &Vec<u8>, tgz_path: &Path, out: &Path) -> io::Result<(
     Ok(())
 }
 
+fn make_path(path_str: &str) -> &Path {
+    let path  = Path::new(path_str);    
+    if fs::metadata(path).is_err() {
+        bail!("Cannot access specified input directory {:?}", path);
+    }
+    return &path;
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args = App::new(APP_NAME)
         .settings(&[AppSettings::ArgRequiredElseHelp, AppSettings::ColoredHelp])
@@ -138,10 +149,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             .short("i")
             .long("input_dir")
             .value_name("input_dir")
-            .help("Sets the input directory containing the application and dependencies")
+            .help("Sets the input directories for packing. Might provide multiple directories, but the first must contain the executed application")
             .display_order(2)
-            .takes_value(true)
-            .required(true))
+            .takes_value(true)            
+            .required(true)
+            .multiple(true)
+            .min_values(1))
         .arg(Arg::with_name("exec")
             .short("e")
             .long("exec")
@@ -165,17 +178,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         bail!("Unknown architecture specified: {}, supported: {:?}", arch, RUNNER_BY_ARCH.keys());
     }
 
-    let input_dir = Path::new(args.value_of("input_dir").unwrap());
-    if fs::metadata(input_dir).is_err() {
-        bail!("Cannot access specified input directory {:?}", input_dir);
-    }
+    let input_dirs: Vec<&Path> = args.values_of("input_dir")    
+        .unwrap()
+        .map(make_path)
+        .collect();
 
     let exec_name = args.value_of("exec").unwrap();
     if exec_name.len() >= RUNNER_MAGIC.len() {
         bail!("Executable name is too long, please consider using a shorter name");
     }
 
-    let exec_path = Path::new(input_dir).join(exec_name);
+    let exec_path = Path::new(input_dirs[0]).join(exec_name);
     match fs::metadata(&exec_path) {
         Err(_) => {
             bail!("Cannot find file {:?}", exec_path);
@@ -189,10 +202,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let runner_buf = patch_runner(&arch, &exec_name)?;
 
-    println!("Compressing input directory {:?}...", input_dir);
     let tmp_dir = TempDir::new(APP_NAME)?;
     let tgz_path = tmp_dir.path().join("input.tgz");
-    create_tgz(&input_dir, &tgz_path)?;
+
+    create_tgz(&input_dirs, &tgz_path)?;
+
 
     let exec_name = Path::new(args.value_of("output").unwrap());
     println!("Creating self-contained application binary {:?}...", exec_name);
