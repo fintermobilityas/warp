@@ -13,6 +13,7 @@ use flate2::write::GzEncoder;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
+use std::iter;
 use std::fs::File;
 use std::io;
 use std::io::copy;
@@ -84,15 +85,15 @@ fn patch_runner(arch: &str, exec_name: &str) -> io::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn create_tgz(dirs: &Vec<&Path>, out: &Path) -> io::Result<()> {
+fn create_tgz(dirs: &Vec<&Path>, out: &Path) -> io::Result<()> {  
     let f = fs::File::create(out)?;
-    let gz = GzEncoder::new(f, Compression::best());
+    let gz = GzEncoder::new(f, Compression::best());    
     let mut tar = tar::Builder::new(gz);
     tar.follow_symlinks(false);
     for dir in dirs.iter() {
         println!("Compressing input directory {:?}...", dir);
-        tar.append_dir_all(".", dir)?;
-    }
+        tar.append_dir_all(".", dir)?;    
+    }         
     Ok(())
 }
 
@@ -115,20 +116,37 @@ fn create_app_file(out: &Path) -> io::Result<File> {
         .open(out)
 }
 
-fn create_app(runner_buf: &Vec<u8>, tgz_path: &Path, out: &Path) -> io::Result<()> {
+fn create_app(runner_buf: &Vec<u8>, tgz_paths: &Vec<&Path>, out: &Path) -> io::Result<()> {
     let mut outf = create_app_file(out)?;
-    let mut tgzf = fs::File::open(tgz_path)?;
     outf.write_all(runner_buf)?;
-    copy(&mut tgzf, &mut outf)?;
+    
+    for tgz_path in tgz_paths.iter() {
+        let mut tgzf = fs::File::open(tgz_path)?;
+        copy(&mut tgzf, &mut outf)?;    
+    }
+
     Ok(())
 }
 
 fn make_path(path_str: &str) -> &Path {
     let path  = Path::new(path_str);    
     if fs::metadata(path).is_err() {
-        bail!("Cannot access specified input directory {:?}", path);
+        bail!("Cannot access specified input path {:?}", path);
     }
     return &path;
+}
+
+fn check_executable_exists(exec_path: &Path){
+    match fs::metadata(&exec_path) {
+        Err(_) => {
+            bail!("Cannot find file {:?}", exec_path);
+        }
+        Ok(metadata) => {
+            if !metadata.is_file() {
+                bail!("{:?} isn't a file", exec_path);
+            }
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -155,20 +173,35 @@ fn main() -> Result<(), Box<dyn Error>> {
             .required(true)
             .multiple(true)
             .min_values(1))
+        .arg(Arg::with_name("input_tgz")
+            .short("t")
+            .long("input_tgz")
+            .value_name("input_tgz")
+            .help("Sets additional already packed tar-gzipped files to be included in package. Might provide multiple files. Can be used with --disable_exec_check param if main executable file is in packed file.")
+            .display_order(3)
+            .takes_value(true)            
+            .required(false)
+            .multiple(true))
         .arg(Arg::with_name("exec")
             .short("e")
             .long("exec")
             .value_name("exec")
             .help("Sets the application executable file name")
-            .display_order(3)
+            .display_order(4)
             .takes_value(true)
             .required(true))
+        .arg(Arg::with_name("disable_exec_check")            
+            .long("disable_exec_check")
+            .help("Disables the check for existence of executable file in target directory. Useful for cases when main executable file is in already packed tgzip file (see input_tgz param)")
+            .display_order(5)
+            .takes_value(false)
+            .required(false))
         .arg(Arg::with_name("output")
             .short("o")
             .long("output")
             .value_name("output")
             .help("Sets the resulting self-contained application file name")
-            .display_order(4)
+            .display_order(6)
             .takes_value(true)
             .required(true))
         .get_matches();
@@ -178,9 +211,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         bail!("Unknown architecture specified: {}, supported: {:?}", arch, RUNNER_BY_ARCH.keys());
     }
 
+    let tmp_dir = TempDir::new(APP_NAME)?;
+    let main_tgz = tmp_dir.path().join("input.tgz");
+    let main_tgz_path = main_tgz.as_path();
+
     let input_dirs: Vec<&Path> = args.values_of("input_dir")    
         .unwrap()
         .map(make_path)
+        .collect();
+
+    let input_tgzs: Vec<&Path> = args.values_of("input_tgz")
+        .unwrap_or(clap::Values::default())
+        .map(make_path)        
+        .chain(iter::once(main_tgz_path))
         .collect();
 
     let exec_name = args.value_of("exec").unwrap();
@@ -188,30 +231,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         bail!("Executable name is too long, please consider using a shorter name");
     }
 
-    let exec_path = Path::new(input_dirs[0]).join(exec_name);
-    match fs::metadata(&exec_path) {
-        Err(_) => {
-            bail!("Cannot find file {:?}", exec_path);
-        }
-        Ok(metadata) => {
-            if !metadata.is_file() {
-                bail!("{:?} isn't a file", exec_path);
-            }
-        }
+    let do_check_exec_existence = !args.is_present("disable_exec_check");
+    if do_check_exec_existence {
+        let exec_path = Path::new(input_dirs[0]).join(exec_name);
+        check_executable_exists(&exec_path);
     }
 
     let runner_buf = patch_runner(&arch, &exec_name)?;
 
-    let tmp_dir = TempDir::new(APP_NAME)?;
-    let tgz_path = tmp_dir.path().join("input.tgz");
-
-    create_tgz(&input_dirs, &tgz_path)?;
-
+    create_tgz(&input_dirs, &main_tgz_path)?; 
 
     let exec_name = Path::new(args.value_of("output").unwrap());
     println!("Creating self-contained application binary {:?}...", exec_name);
-    create_app(&runner_buf, &tgz_path, &exec_name)?;
-
+    create_app(&runner_buf, &input_tgzs, &exec_name)?;
     println!("All done");
     Ok(())
 }
