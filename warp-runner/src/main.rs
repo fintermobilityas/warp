@@ -16,17 +16,26 @@ mod extractor;
 mod executor;
 
 static TARGET_FILE_NAME_BUF: &'static [u8] = b"tVQhhsFFlGGD3oWV4lEPST8I8FEPP54IM0q7daes4E1y3p2U2wlJRYmWmjPYfkhZ0PlT14Ls0j8fdDkoj33f2BlRJavLj3mWGibJsGt5uLAtrCDtvxikZ8UX2mQDCrgE\0";
+static TARGET_UID_BUF: &'static [u8] = b"DR1PWsJsM6KxNbng9Y38\0";
+
+fn build_uid() -> &'static str {
+    return read_magic("TARGET_UID_BUF", &TARGET_UID_BUF)
+}
 
 fn target_file_name() -> &'static str {
-    let nul_pos = TARGET_FILE_NAME_BUF.iter()
-        .position(|elem| *elem == b'\0')
-        .expect("TARGET_FILE_NAME_BUF has no NUL terminator");
+    return read_magic("TARGET_FILE_NAME_BUF", &TARGET_FILE_NAME_BUF)
+}
 
-    let slice = &TARGET_FILE_NAME_BUF[..(nul_pos + 1)];
+fn read_magic(magic_name: &str, magic: &'static [u8]) -> &'static str {
+    let nul_pos = magic.iter()
+        .position(|elem| *elem == b'\0')
+        .expect(&format!("{} has no NUL terminator", magic_name));
+
+    let slice = &magic[..(nul_pos + 1)];
     CStr::from_bytes_with_nul(slice)
-        .expect("Can't convert TARGET_FILE_NAME_BUF slice to CStr")
+        .expect(&format!("Can't convert {} slice to CStr", magic_name))
         .to_str()
-        .expect("Can't convert TARGET_FILE_NAME_BUF CStr to str")
+        .expect(&format!("Can't convert {} CStr to str", magic_name))
 }
 
 fn cache_path(target: &str) -> PathBuf {
@@ -48,12 +57,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         simple_logger::init_with_level(Level::Trace)?;
     }
 
+
+
+    let build_uid = build_uid();
     let self_path = env::current_exe()?;
     let self_file_name = self_path.file_name().unwrap();
-    let cache_path = cache_path(&self_file_name.to_string_lossy());
+    let cache_folder_name = format!("{}.{}", self_file_name.to_string_lossy(), build_uid);
+    let cache_path = cache_path(&cache_folder_name);
 
     trace!("self_path={:?}", self_path);
     trace!("self_file_name={:?}", self_file_name);
+    trace!("build_uid={:?}", build_uid);
     trace!("cache_path={:?}", cache_path);
 
     let target_file_name = target_file_name();
