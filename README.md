@@ -542,7 +542,7 @@ The performance characteristics of the generated self-contained application is r
 
 ### Packages cache location
 - Linux: `$HOME/.local/share/warp/packages`
-- macOS: `$HOME/Library/Application Support/warp/packges`
+- macOS: `$HOME/Library/Application Support/warp/packages`
 - Windows: `%LOCALAPPDATA%\warp\packages`
 
 ### Runners cache location
