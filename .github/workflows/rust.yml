@@ -47,8 +47,8 @@ jobs:
       - name: Install mingw
         if: matrix.target == 'x86_64-pc-windows-gnu'
         run: |
-          apt-get update && \
-          apt-get install -y --no-install-recommends \
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
             mingw-w64 g++-mingw-w64-x86-64
 
       - name: Cache cargo registry
