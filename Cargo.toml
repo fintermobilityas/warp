@@ -1,2 +1,7 @@
 [workspace]
 members = ["warp-runner", "warp-packer"]
+
+[profile.release]
+opt-level = 'z' # Optimize for size
+lto = true # Remove dead code and often times reduces binary size
+codegen-units = 1 # Maximum size reduction optimizations
