@@ -28,7 +28,7 @@ jobs:
           echo "::set-env name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION"
           echo "::set-output name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION":
  
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     name: Build ${{ matrix.target }}
     needs: [setup]
@@ -36,7 +36,7 @@ jobs:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
     strategy:
       matrix: 
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, x86_64-apple-darwin]
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -69,5 +69,39 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.target }}
+          name: build-${{ matrix.target }}
+          path: ${{ github.workspace }}/target/**/*
+
+  build-osx:
+    runs-on: macosx-latest
+    name: Build x86_64-apple-darwin
+    needs: [setup]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Setup target
+        run: rustup target add x86_64-apple-darwin --toolchain stable
+        
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: $x86_64-apple-darwin-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            x86_64-apple-darwin-cargo-registry-
+          
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-runner
+         cargo build --release --target x86_64-apple-darwin
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-x86_64-apple-darwin
           path: ${{ github.workspace }}/target/**/*
