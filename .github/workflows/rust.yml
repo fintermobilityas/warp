@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ matrix.target }}
-          path: ${{ github.workspace }}/target/**/*
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/**/*
 
   build-warp-runner-osx:
     runs-on: macos-latest
@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ env.RUST_TARGET }}
-          path: ${{ github.workspace }}/target/**/*
+          path: ${{ github.workspace }}/${{ env.RUST_TARGET }}/release/**/*
  
   build-warp-packer:
     runs-on: ${{ matrix.os }}
@@ -124,19 +124,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-pc-windows-gnu
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release
           
       - name: Download warp runner (x86_64-unknown-linux-gnu)
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-unknown-linux-gnu
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release
           
       - name: Download warp runner (x86_64-apple-darwin)
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-apple-darwin
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
           
       - name: Setup x86_64-pc-windows-gnu
         if: matrix.os == 'windows-latest'
@@ -175,5 +175,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-packer-${{ env.RUST_TARGET }}
-          path: ${{ github.workspace }}/target/**/*
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/**/*
  
