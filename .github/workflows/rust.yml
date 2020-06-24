@@ -177,3 +177,42 @@ jobs:
           name: warp-packer-${{ env.RUST_TARGET }}
           path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
  
+  publish:
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/master'
+    name: Publish release
+    needs: [setup, build-warp-runner-linux, build-warp-runner-osx, build-warp-packer]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    steps:
+      - name: Download warp packer (x86_64-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-pc-windows-gnu
+          path: ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release
+          
+      - name: Download warp packer (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-unknown-linux-gnu
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release
+          
+      - name: Download warp packer (x86_64-apple-darwin)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-apple-darwin
+          path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
+          
+      - name: Create github release tag
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ env.CARGO_PKG_VERSION }}
+          tag_name: v${{ env.CARGO_PKG_VERSION }}
+          draft: true
+          prerelease: false
+          files: |
+            ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/windows-x64.warp-packer.exe
+            ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/linux-x64.warp-packer
+            ${{ github.workspace }}/target/x86_64-apple-darwin/release/macos-x64.warp-packer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
