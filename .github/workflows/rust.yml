@@ -51,4 +51,4 @@ jobs:
             ${{ runner.os }}-cargo-registry-
           
       - name: Build 
-        run: cargo build --release --all-targets
+        run: cargo build --release --all --all-targets
