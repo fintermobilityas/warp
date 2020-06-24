@@ -1,0 +1,218 @@
+name: Rust
+
+on: push
+
+env:
+  GITVERSION_VERSION: 5.3.6
+  CARGO_TERM_COLOR: always
+  DEBIAN_FRONTEND: noninteractive
+  
+jobs:
+  setup:    
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      WARP_VERSION: ${{ steps.set-version.outputs.WARP_VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.2.0
+        with:
+          fetch-depth: 0
+        
+      - id: set-version
+        name: Setup GitVersion and set build version
+        shell: pwsh
+        run: |
+          dotnet tool update GitVersion.Tool --global --version ${{ env.GITVERSION_VERSION }}
+          $CARGO_PKG_VERSION = (dotnet gitversion /showVariable SemVer) | Out-String
+          echo "::set-env name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION"
+          echo "::set-output name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION":
+ 
+  build-warp-runner-linux:
+    runs-on: ubuntu-latest
+    name: Build WR ${{ matrix.target }}
+    needs: [setup]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    strategy:
+      matrix: 
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Setup target
+        run: rustup target add ${{ matrix.target }} --toolchain stable
+
+      - name: Install mingw
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
+            mingw-w64 g++-mingw-w64-x86-64
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ matrix.target }}-warp-runner-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.target }}-warp-runner-cargo-registry-
+          
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-runner
+         cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: warp-runner-${{ matrix.target }}
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
+
+  build-warp-runner-osx:
+    runs-on: macos-latest
+    name: Build WR x86_64-apple-darwin
+    needs: [setup]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+      RUST_TARGET: x86_64-apple-darwin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Setup target
+        run: rustup target add ${{ env.RUST_TARGET }} --toolchain stable
+        
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ env.RUST_TARGET }}-warp-runner-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+             ${{ env.RUST_TARGET }}-warp-runner-cargo-registry-
+          
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-runner
+         cargo build --release --target x86_64-apple-darwin
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: warp-runner-${{ env.RUST_TARGET }}
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-runner
+ 
+  build-warp-packer:
+    runs-on: ${{ matrix.os }}
+    name: Build WP ${{ matrix.os }}
+    needs: [setup, build-warp-runner-linux, build-warp-runner-osx]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    strategy:
+      matrix: 
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Download warp runner (x86_64-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-pc-windows-gnu
+          path: ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release
+          
+      - name: Download warp runner (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-unknown-linux-gnu
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release
+          
+      - name: Download warp runner (x86_64-apple-darwin)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-apple-darwin
+          path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
+          
+      - name: Setup x86_64-pc-windows-gnu
+        if: matrix.os == 'windows-latest'
+        run: |
+          rustup target add x86_64-pc-windows-gnu --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-pc-windows-gnu"
+          
+      - name: Setup x86_64-unknown-linux-gnu
+        if: matrix.os == 'ubuntu-latest'
+        run: | 
+          rustup target add x86_64-unknown-linux-gnu --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-unknown-linux-gnu"
+
+      - name: Setup x86_64-apple-darwin
+        if: matrix.os == 'macos-latest'
+        run: |
+          rustup target add x86_64-apple-darwin --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-apple-darwin"
+          
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ env.RUST_TARGET }}-warp-packer-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ env.RUST_TARGET }}-warp-packer-cargo-registry-
+          
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-packer
+         cargo build --release --target ${{ env.RUST_TARGET }}
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: warp-packer-${{ env.RUST_TARGET }}
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
+ 
+  publish:
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/master'
+    name: Publish release
+    needs: [setup, build-warp-runner-linux, build-warp-runner-osx, build-warp-packer]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    steps:
+      - name: Download warp packer (x86_64-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-pc-windows-gnu
+          path: ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release
+          
+      - name: Download warp packer (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-unknown-linux-gnu
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release
+          
+      - name: Download warp packer (x86_64-apple-darwin)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-x86_64-apple-darwin
+          path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
+          
+      - name: Create github release tag
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ env.CARGO_PKG_VERSION }}
+          tag_name: v${{ env.CARGO_PKG_VERSION }}
+          draft: true
+          prerelease: false
+          files: |
+            ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/windows-x64.warp-packer.exe
+            ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/linux-x64.warp-packer
+            ${{ github.workspace }}/target/x86_64-apple-darwin/release/macos-x64.warp-packer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
