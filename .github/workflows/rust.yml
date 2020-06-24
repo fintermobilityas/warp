@@ -6,7 +6,7 @@ env:
   GITVERSION_VERSION: 5.3.6
   CARGO_TERM_COLOR: always
   DEBIAN_FRONTEND: noninteractive
-  
+  CARGO_PKG_AUTHORS: Finter Mobility As 
 jobs:
   setup:    
     name: Setup
