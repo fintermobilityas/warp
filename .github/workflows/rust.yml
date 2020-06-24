@@ -69,7 +69,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: build-${{ matrix.target }}
+          name: warp-runner-${{ matrix.target }}
           path: ${{ github.workspace }}/target/**/*
 
   build-warp-runner-osx:
@@ -103,5 +103,67 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: build-x86_64-apple-darwin
+          name: warp-runner-x86_64-apple-darwin
+          path: ${{ github.workspace }}/target/**/*
+        
+  build-warp-packer:
+    runs-on: ubuntu-latest
+    name: Build ${{ matrix.target }}
+    needs: [setup, build-warp-runner-linux, build-warp-runner-osx]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+    strategy:
+      matrix: 
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, x86_64-apple-darwin]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Download warp runner (x86_64-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-pc-windows-gnu
+          path: ${{ github.workspace }}/target
+          
+      - name: Download warp runner (x86_64-unknown-linux-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-unknown-linux-gnu
+          path: ${{ github.workspace }}/target
+          
+      - name: Download warp runner (x86_64-apple-darwin)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-x86_64-apple-darwin
+          path: ${{ github.workspace }}/target
+          
+      - name: Setup target
+        run: rustup target add ${{ matrix.target }} --toolchain stable
+
+      - name: Install mingw
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
+            mingw-w64 g++-mingw-w64-x86-64
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ matrix.target }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.target }}-cargo-registry-
+          
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-packer
+         cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: warp-packer-${{ matrix.target }}
           path: ${{ github.workspace }}/target/**/*
