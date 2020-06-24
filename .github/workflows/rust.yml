@@ -1,0 +1,44 @@
+name: Rust
+
+on: push
+
+env:
+  GITVERSION_VERSION: 5.3.6
+  CARGO_TERM_COLOR: always
+
+jobs:
+  setup:    
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      WARP_VERSION: ${{ steps.set-version.outputs.WARP_VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.2.0
+        with:
+          fetch-depth: 0
+        
+      - id: set-version
+        name: Setup GitVersion and set build version
+        shell: pwsh
+        run: |
+          dotnet tool update GitVersion.Tool --global --version ${{ env.GITVERSION_VERSION }}
+          $WARP_VERSION = (dotnet gitversion /showVariable SemVer) | Out-String
+          echo "::set-env name=WARP_VERSION::$WARP_VERSION"
+          echo "::set-output name=WARP_VERSION::$WARP_VERSION":
+ 
+  build:
+    runs-on: ubuntu-latest
+    needs: [setup]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Setup targets
+        run: |
+          rustup target add x86_64-pc-windows-gnu --toolchain stable
+          rustup target add x86_64-unknown-linux-gnu --toolchain stable
+          rustup target add x86_64-apple-darwin --toolchain stable
+
+      - name: Build
+        run: cargo build --release --verbose
