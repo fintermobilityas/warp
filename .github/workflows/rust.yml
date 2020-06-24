@@ -29,6 +29,7 @@ jobs:
  
   build:
     runs-on: ubuntu-latest
+    name: Build all targets
     needs: [setup]
     steps:
       - name: Checkout
@@ -49,5 +50,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
           
-      - name: Build
+      - name: Build 
         run: cargo build --release --all-targets
