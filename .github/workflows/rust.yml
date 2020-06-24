@@ -85,6 +85,7 @@ jobs:
     needs: [setup]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+      CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
       RUST_TARGET: x86_64-apple-darwin
     steps:
       - name: Checkout
@@ -124,6 +125,7 @@ jobs:
     needs: [setup, build-warp-runner-linux, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+      CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     strategy:
       matrix: 
         os: [windows-latest, ubuntu-latest, macos-latest]
