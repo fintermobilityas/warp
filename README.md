@@ -1,5 +1,7 @@
 # Warp
 
+![dependabot](https://api.dependabot.com/badges/status?host=github&repo=fintermobilityas/snapx)
+
 | Build server | Platforms | Build status |
 |--------------|----------|--------------|
 | Github Actions | linux-latest, windows-latest, macos-latest | Branch: develop ![warp](https://github.com/fintermobilityas/warp/workflows/warp/badge.svg?branch=develop) |
