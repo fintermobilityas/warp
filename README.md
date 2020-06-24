@@ -4,8 +4,8 @@
 
 | Build server | Platforms | Build status |
 |--------------|----------|--------------|
-| Github Actions | linux-latest, windows-latest, macos-latest | Branch: develop ![warp](https://github.com/fintermobilityas/warp/workflows/warp/badge.svg?branch=develop) |
-| Github Actions | linux-latest, windows-latest, macos-latest | Branch: master ![warp](https://github.com/fintermobilityas/warp/workflows/warp/badge.svg?branch=master) |
+| Github Actions | linux-latest, windows-latest, macos-latest | Branch: develop ![warp](https://github.com/fintermobilityas/warp/workflows/Rust/badge.svg?branch=develop) |
+| Github Actions | linux-latest, windows-latest, macos-latest | Branch: master ![warp](https://github.com/fintermobilityas/warp/workflows/Rust/badge.svg?branch=master) |
 
 Warp lets you create self-contained single binary applications making it simpler and more ergonomic to deliver your application to your customers. A self-contained binary is specially convenient when the technology you use, such as Node.js, .NET Core, Java and others, contain many dependencies that must be shipped alongside your application.
 
