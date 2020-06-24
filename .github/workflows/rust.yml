@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ matrix.target }}
-          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/**/*
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
 
   build-warp-runner-osx:
     runs-on: macos-latest
@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ env.RUST_TARGET }}
-          path: ${{ github.workspace }}/${{ env.RUST_TARGET }}/release/**/*
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-runner
  
   build-warp-packer:
     runs-on: ${{ matrix.os }}
@@ -175,5 +175,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-packer-${{ env.RUST_TARGET }}
-          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/**/*
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
  
