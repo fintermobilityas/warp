@@ -30,7 +30,7 @@ jobs:
  
   build-warp-runner-linux:
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.target }}
+    name: Build WR ${{ matrix.target }}
     needs: [setup]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
@@ -56,9 +56,9 @@ jobs:
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
-          key: ${{ matrix.target }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.target }}-warp-runner-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ matrix.target }}-cargo-registry-
+            ${{ matrix.target }}-warp-runner-cargo-registry-
           
       - name: Build 
         run: |
@@ -70,29 +70,30 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ matrix.target }}
-          path: ${{ github.workspace }}/target/**/*
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
 
   build-warp-runner-osx:
     runs-on: macos-latest
-    name: Build x86_64-apple-darwin
+    name: Build WR x86_64-apple-darwin
     needs: [setup]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+      RUST_TARGET: x86_64-apple-darwin
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         
       - name: Setup target
-        run: rustup target add x86_64-apple-darwin --toolchain stable
+        run: rustup target add ${{ env.RUST_TARGET }} --toolchain stable
         
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
-          key: $x86_64-apple-darwin-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ env.RUST_TARGET }}-warp-runner-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            x86_64-apple-darwin-cargo-registry-
+             ${{ env.RUST_TARGET }}-warp-runner-cargo-registry-
           
       - name: Build 
         run: |
@@ -103,18 +104,18 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: warp-runner-x86_64-apple-darwin
-          path: ${{ github.workspace }}/target/**/*
-        
+          name: warp-runner-${{ env.RUST_TARGET }}
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-runner
+ 
   build-warp-packer:
-    runs-on: ubuntu-latest
-    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    name: Build WP ${{ matrix.os }}
     needs: [setup, build-warp-runner-linux, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
     strategy:
       matrix: 
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, x86_64-apple-darwin]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -123,47 +124,56 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-pc-windows-gnu
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release
           
       - name: Download warp runner (x86_64-unknown-linux-gnu)
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-unknown-linux-gnu
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release
           
       - name: Download warp runner (x86_64-apple-darwin)
         uses: actions/download-artifact@v2
         with:
           name: warp-runner-x86_64-apple-darwin
-          path: ${{ github.workspace }}/target
+          path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
           
-      - name: Setup target
-        run: rustup target add ${{ matrix.target }} --toolchain stable
-
-      - name: Install mingw
-        if: matrix.target == 'x86_64-pc-windows-gnu'
+      - name: Setup x86_64-pc-windows-gnu
+        if: matrix.os == 'windows-latest'
         run: |
-          sudo apt-get update && \
-          sudo apt-get install -y --no-install-recommends \
-            mingw-w64 g++-mingw-w64-x86-64
+          rustup target add x86_64-pc-windows-gnu --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-pc-windows-gnu"
+          
+      - name: Setup x86_64-unknown-linux-gnu
+        if: matrix.os == 'ubuntu-latest'
+        run: | 
+          rustup target add x86_64-unknown-linux-gnu --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-unknown-linux-gnu"
 
+      - name: Setup x86_64-apple-darwin
+        if: matrix.os == 'macos-latest'
+        run: |
+          rustup target add x86_64-apple-darwin --toolchain stable
+          echo "::set-env name=RUST_TARGET::x86_64-apple-darwin"
+          
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
-          key: ${{ matrix.target }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ env.RUST_TARGET }}-warp-packer-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ matrix.target }}-cargo-registry-
+            ${{ env.RUST_TARGET }}-warp-packer-cargo-registry-
           
       - name: Build 
         run: |
          cd ${{ github.workspace }}/warp-packer
-         cargo build --release --target ${{ matrix.target }}
+         cargo build --release --target ${{ env.RUST_TARGET }}
 
       - name: Upload artifacts
         if: success()
         uses: actions/upload-artifact@v2
         with:
-          name: warp-packer-${{ matrix.target }}
-          path: ${{ github.workspace }}/target/**/*
+          name: warp-packer-${{ env.RUST_TARGET }}
+          path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
+ 
