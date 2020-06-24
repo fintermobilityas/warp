@@ -169,6 +169,10 @@ jobs:
          cd ${{ github.workspace }}/warp-packer
          cargo build --release --target ${{ env.RUST_TARGET }}
 
+      - name: Strip symbols
+        if: github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: strip ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer
+          
       - name: Upload artifacts
         if: success()
         uses: actions/upload-artifact@v2
@@ -202,12 +206,15 @@ jobs:
           name: warp-packer-x86_64-apple-darwin
           path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
       
-      - name: Rename files
+      - name: Strip symbols
         run: |
           cp ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/warp-packer.exe windows-x64.warp-packer.exe
           cp ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/warp-packer linux-x64.warp-packer
           cp ${{ github.workspace }}/target/x86_64-apple-darwin/release/warp-packer macos-x64.warp-packer
-      
+          
+          # linux/osx binaries are stripped in build-warp-packer step
+          strip windows-x64.warp-packer.exe
+          
       - name: Create github release tag
         uses: softprops/action-gh-release@v1
         with:
