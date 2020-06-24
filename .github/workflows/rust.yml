@@ -73,7 +73,7 @@ jobs:
           path: ${{ github.workspace }}/target/**/*
 
   build-osx:
-    runs-on: macosx-latest
+    runs-on: macos-latest
     name: Build x86_64-apple-darwin
     needs: [setup]
     env:
