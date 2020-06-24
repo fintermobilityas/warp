@@ -6,13 +6,13 @@ env:
   GITVERSION_VERSION: 5.3.6
   CARGO_TERM_COLOR: always
   DEBIAN_FRONTEND: noninteractive
-  
+  CARGO_PKG_AUTHORS: Finter Mobility As 
 jobs:
   setup:    
     name: Setup
     runs-on: ubuntu-latest
     outputs:
-      WARP_VERSION: ${{ steps.set-version.outputs.WARP_VERSION }}
+      CARGO_PKG_VERSION: ${{ steps.set-version.outputs.CARGO_PKG_VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2.2.0
@@ -25,7 +25,6 @@ jobs:
         run: |
           dotnet tool update GitVersion.Tool --global --version ${{ env.GITVERSION_VERSION }}
           $CARGO_PKG_VERSION = (dotnet gitversion /showVariable SemVer) | Out-String
-          echo "::set-env name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION"
           echo "::set-output name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION":
  
   build-warp-runner-linux:
@@ -170,6 +169,10 @@ jobs:
          cd ${{ github.workspace }}/warp-packer
          cargo build --release --target ${{ env.RUST_TARGET }}
 
+      - name: Strip symbols
+        if: github.ref == 'refs/heads/master' && matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: strip ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer
+          
       - name: Upload artifacts
         if: success()
         uses: actions/upload-artifact@v2
@@ -202,6 +205,15 @@ jobs:
         with:
           name: warp-packer-x86_64-apple-darwin
           path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
+      
+      - name: Strip symbols
+        run: |
+          cp ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/warp-packer.exe windows-x64.warp-packer.exe
+          cp ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/warp-packer linux-x64.warp-packer
+          cp ${{ github.workspace }}/target/x86_64-apple-darwin/release/warp-packer macos-x64.warp-packer
+          
+          # linux/osx binaries are stripped in build-warp-packer step
+          strip windows-x64.warp-packer.exe
           
       - name: Create github release tag
         uses: softprops/action-gh-release@v1
@@ -211,8 +223,8 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/windows-x64.warp-packer.exe
-            ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/linux-x64.warp-packer
-            ${{ github.workspace }}/target/x86_64-apple-darwin/release/macos-x64.warp-packer
+            windows-x64.warp-packer.exe
+            linux-x64.warp-packer
+            macos-x64.warp-packer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
