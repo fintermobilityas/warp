@@ -29,26 +29,35 @@ jobs:
  
   build:
     runs-on: ubuntu-latest
-    name: Build all targets
+    name: Build ${{ matrix.target }}
     needs: [setup]
+    strategy:
+      matrix: 
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, x86_64-apple-darwin]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Setup targets
-        run: |
-          rustup target add x86_64-pc-windows-gnu --toolchain stable
-          rustup target add x86_64-unknown-linux-gnu --toolchain stable
-          rustup target add x86_64-apple-darwin --toolchain stable
+      - name: Setup target
+        run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.target }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-registry-
+            ${{ matrix.target }}-cargo-registry-
           
       - name: Build 
-        run: cargo build --release --all --all-targets
+        run: |
+         cd ${{ github.workspace }}/warp-runner
+         cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ github.workspace }}/target/**/*
