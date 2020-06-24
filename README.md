@@ -1,6 +1,6 @@
 # Warp
 
-![dependabot](https://api.dependabot.com/badges/status?host=github&repo=fintermobilityas/snapx)
+![dependabot](https://api.dependabot.com/badges/status?host=github&repo=fintermobilityas/warp)
 
 | Build server | Platforms | Build status |
 |--------------|----------|--------------|
