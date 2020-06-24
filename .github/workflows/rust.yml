@@ -28,7 +28,7 @@ jobs:
           echo "::set-env name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION"
           echo "::set-output name=CARGO_PKG_VERSION::$CARGO_PKG_VERSION":
  
-  build-linux:
+  build-warp-runner-linux:
     runs-on: ubuntu-latest
     name: Build ${{ matrix.target }}
     needs: [setup]
@@ -72,7 +72,7 @@ jobs:
           name: build-${{ matrix.target }}
           path: ${{ github.workspace }}/target/**/*
 
-  build-osx:
+  build-warp-runner-osx:
     runs-on: macos-latest
     name: Build x86_64-apple-darwin
     needs: [setup]
