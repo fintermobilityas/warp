@@ -120,8 +120,8 @@ jobs:
           path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-runner
  
   build-warp-packer-windows:
-    runs-on: windows-latest
-    name: Build WP windows-latest ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    name: Build WP ${{ matrix.target }}
     needs: [setup, build-warp-runner-linux, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
@@ -156,6 +156,12 @@ jobs:
         with:
           name: warp-runner-x86_64-apple-darwin
           path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
+
+      - name: Install mingw
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
+              mingw-w64 g++-mingw-w64-x86-64 g++-mingw-w64-i686 
 
       - name: Setup ${{ matrix.target }}
         run: rustup target add ${{ matrix.target }} --toolchain stable
