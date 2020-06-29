@@ -52,7 +52,8 @@ jobs:
         run: |
           sudo apt-get update && \
           sudo apt-get install -y --no-install-recommends \
-            mingw-w64 g++-mingw-w64-x86-64 g++-mingw-w64-i686
+              gcc-7 g++-7 mingw-w64 g++-mingw-w64-x86-64 g++-mingw-w64-i686 && \
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
 
       - name: Cache cargo registry
         uses: actions/cache@v2
