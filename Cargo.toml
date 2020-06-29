@@ -5,3 +5,4 @@ members = ["warp-runner", "warp-packer"]
 opt-level = 'z' # Optimize for size
 lto = true # Remove dead code and often times reduces binary size
 codegen-units = 1 # Maximum size reduction optimizations
+panic = "abort" # https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/aborting-on-panic.html
