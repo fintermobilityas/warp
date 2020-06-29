@@ -39,7 +39,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     strategy:
       matrix: 
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
+        target: [i686-pc-windows-gnu, x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,11 +48,11 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Install mingw
-        if: matrix.target == 'x86_64-pc-windows-gnu'
+        if: matrix.target == 'i686-pc-windows-gnu' || matrix.target == 'x86_64-pc-windows-gnu'
         run: |
           sudo apt-get update && \
           sudo apt-get install -y --no-install-recommends \
-            mingw-w64 g++-mingw-w64-x86-64
+            mingw-w64 g++-mingw-w64-x86-64 g++-mingw-w64-i686
 
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -132,7 +132,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
+      - name: Download warp runner (i686-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-runner-i686-pc-windows-gnu
+          path: ${{ github.workspace }}/target/i686-pc-windows-gnu/release
+
       - name: Download warp runner (x86_64-pc-windows-gnu)
         uses: actions/download-artifact@v2
         with:
@@ -150,7 +156,13 @@ jobs:
         with:
           name: warp-runner-x86_64-apple-darwin
           path: ${{ github.workspace }}/target/x86_64-apple-darwin/release
-          
+
+      - name: Setup i686-pc-windows-gnu
+        if: matrix.os == 'windows-latest'
+        run: |
+          rustup target add i686-pc-windows-gnu --toolchain stable
+          echo "::set-env name=RUST_TARGET::i686-pc-windows-gnu"
+
       - name: Setup x86_64-pc-windows-gnu
         if: matrix.os == 'windows-latest'
         run: |
@@ -206,6 +218,13 @@ jobs:
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
     steps:
+
+      - name: Download warp packer (i686-pc-windows-gnu)
+        uses: actions/download-artifact@v2
+        with:
+          name: warp-packer-i686-pc-windows-gnu
+          path: ${{ github.workspace }}/target/i686-pc-windows-gnu/release
+      
       - name: Download warp packer (x86_64-pc-windows-gnu)
         uses: actions/download-artifact@v2
         with:
@@ -226,11 +245,13 @@ jobs:
       
       - name: Strip symbols
         run: |
+          cp ${{ github.workspace }}/target/i686-pc-windows-gnu/release/warp-packer.exe windows-x86.warp-packer.exe
           cp ${{ github.workspace }}/target/x86_64-pc-windows-gnu/release/warp-packer.exe windows-x64.warp-packer.exe
           cp ${{ github.workspace }}/target/x86_64-unknown-linux-gnu/release/warp-packer linux-x64.warp-packer
           cp ${{ github.workspace }}/target/x86_64-apple-darwin/release/warp-packer macos-x64.warp-packer
           
           # linux/osx binaries are stripped in build-warp-packer step
+          strip windows-x86.warp-packer.exe
           strip windows-x64.warp-packer.exe
           
       - name: Create github release tag
@@ -241,6 +262,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
+            windows-x86.warp-packer.exe
             windows-x64.warp-packer.exe
             linux-x64.warp-packer
             macos-x64.warp-packer
