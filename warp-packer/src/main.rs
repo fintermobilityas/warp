@@ -118,7 +118,7 @@ fn create_app(runner_buf: &Vec<u8>, tgz_path: &Path, out: &Path) -> io::Result<(
     Ok(())
 }
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = App::new(APP_NAME)
         .settings(&[AppSettings::ArgRequiredElseHelp, AppSettings::ColoredHelp])
         .version(VERSION)

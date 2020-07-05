@@ -43,7 +43,7 @@ fn extract(exe_path: &Path, cache_path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     if env::var("WARP_TRACE").is_ok() {
         simple_logger::init_with_level(Level::Trace)?;
     }
