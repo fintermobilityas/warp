@@ -1,5 +1,6 @@
 #[cfg(windows)]
 extern crate winres;
+#[cfg(windows)]
 extern crate winapi;
 
 #[cfg(windows)]
