@@ -29,6 +29,7 @@ Warp is written in Rust and is supported on Linux, Windows and macOS.
     + [Runners cache location](#runners-cache-location)
   * [Authors](#authors)
   * [License](#license)
+  * [Icons](#icons)
 
 
 ## Quickstart with Node.js
@@ -563,6 +564,9 @@ The performance characteristics of the generated self-contained application is r
 ## Authors
 - Diego Giagio `<diego@giagio.com>`
 - Finter Mobility As
+
+## Icons
+- MIT License - https://github.com/tabler/tabler-icons
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
