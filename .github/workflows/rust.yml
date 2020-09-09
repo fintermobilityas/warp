@@ -493,11 +493,11 @@ jobs:
           name: warp-packer-${{ env.RUST_TARGET }}
           path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
 
-publish:
+  publish:
     runs-on: ubuntu-latest
     if: success() && github.ref == 'refs/heads/master'
     name: Publish release
-    needs: [setup, build-warp-runner-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-runner-osx, build-warp-packer-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-packer-macos-x64]
+    needs: [setup, build-warp-runner-windows, build-warp-runner-linux-x64, build-warp-runner-linux-aarch64, build-warp-runner-osx, build-warp-packer-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-packer-macos-x64]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
     steps:
