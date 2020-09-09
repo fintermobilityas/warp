@@ -70,10 +70,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: warp-runner-${{ matrix.target }}
-          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
-          
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*          
  
-  build-warp-runner-linux:
+  build-warp-runner-linux-x64:
     runs-on: ubuntu-latest
     name: Build WR ${{ matrix.target }}
     needs: [setup]
@@ -82,7 +81,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     strategy:
       matrix: 
-        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+        target: [x86_64-unknown-linux-gnu]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -115,6 +114,48 @@ jobs:
           name: warp-runner-${{ matrix.target }}
           path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
 
+  build-warp-runner-linux-aarch64:
+    runs-on: ubuntu-latest
+    name: Build WR ${{ matrix.target }}
+    needs: [setup]
+    env:
+      CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
+      CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
+    strategy:
+      matrix: 
+        target: [aarch64-unknown-linux-gnu]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup target
+        run: rustup target add ${{ matrix.target }} --toolchain stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: true
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ matrix.target }}-warp-runner-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.target }}-warp-runner-cargo-registry-
+                  
+      - name: Set cargo build metadata
+        shell: pwsh
+        run: ./ci/cargo.ps1 -Version ${{ env.CARGO_PKG_VERSION }} -Authors "${{ env.CARGO_PKG_AUTHORS }}"
+      
+      - name: Build 
+        run: |
+         cd ${{ github.workspace }}/warp-runner
+         cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: warp-runner-${{ matrix.target }}
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
+          
   build-warp-runner-osx:
     runs-on: macos-latest
     name: Build WR x86_64-apple-darwin
@@ -158,7 +199,7 @@ jobs:
   build-warp-packer-windows:
     runs-on: windows-latest
     name: Build WP ${{ matrix.target }}
-    needs: [setup, build-warp-runner-windows, build-warp-runner-linux, build-warp-runner-osx]
+    needs: [setup, build-warp-runner-windows, build-warp-runner-linux-x64, build-warp-runner-linux-aarch64, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
@@ -230,7 +271,7 @@ jobs:
   build-warp-packer-linux-x64:
     runs-on: ubuntu-latest
     name: Build WP linux-x64
-    needs: [setup, build-warp-runner-windows, build-warp-runner-linux, build-warp-runner-osx]
+    needs: [setup, build-warp-runner-windows, build-warp-runner-linux-x64, build-warp-runner-linux-aarch64, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
@@ -301,11 +342,11 @@ jobs:
         with:
           name: warp-packer-${{ env.RUST_TARGET }}
           path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
-
+  
   build-warp-packer-linux-aarch64:
     runs-on: [self-hosted, linux, ARM64]
     name: Build WP linux-aarch64
-    needs: [setup, build-warp-runner-windows, build-warp-runner-linux, build-warp-runner-osx]
+    needs: [setup, build-warp-runner-windows, build-warp-runner-linux-x64, build-warp-runner-linux-aarch64, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
@@ -380,7 +421,7 @@ jobs:
   build-warp-packer-macos-x64:
     runs-on: macos-latest
     name: Build WP macos-x64
-    needs: [setup, build-warp-runner-windows, build-warp-runner-linux, build-warp-runner-osx]
+    needs: [setup, build-warp-runner-windows, build-warp-runner-linux-x64, build-warp-runner-linux-aarch64, build-warp-runner-osx]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
@@ -452,11 +493,11 @@ jobs:
           name: warp-packer-${{ env.RUST_TARGET }}
           path: ${{ github.workspace }}/target/${{ env.RUST_TARGET }}/release/warp-packer*
 
-  publish:
+publish:
     runs-on: ubuntu-latest
     if: success() && github.ref == 'refs/heads/master'
     name: Publish release
-    needs: [setup, build-warp-runner-windows, build-warp-runner-linux, build-warp-runner-osx, build-warp-packer-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-packer-macos-x64]
+    needs: [setup, build-warp-runner-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-runner-osx, build-warp-packer-windows, build-warp-packer-linux-x64, build-warp-packer-linux-aarch64, build-warp-packer-macos-x64]
     env:
       CARGO_PKG_VERSION: ${{ needs.setup.outputs.CARGO_PKG_VERSION }}
     steps:
