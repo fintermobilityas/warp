@@ -115,7 +115,7 @@ jobs:
           path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
 
   build-warp-runner-linux-aarch64:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ARM64]
     name: Build WR ${{ matrix.target }}
     needs: [setup]
     env:
