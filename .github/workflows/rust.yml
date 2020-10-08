@@ -115,7 +115,7 @@ jobs:
           path: ${{ github.workspace }}/target/${{ matrix.target }}/release/warp-runner*
 
   build-warp-runner-linux-aarch64:
-    runs-on: [self-hosted, linux, ARM64]
+    runs-on: ubuntu-latest
     name: Build WR ${{ matrix.target }}
     needs: [setup]
     env:
@@ -127,6 +127,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Install gcc cross compiler toolchain
+        run:
+          apt-get install gcc-8-aarch64-linux-gnu g++-8-aarch64-linux-gnu libc6-dev-arm64-cross libstdc++-8-dev-arm64-cross
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
