@@ -129,8 +129,8 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install gcc cross compiler toolchain
-        run:
-          apt-get install gcc-8-aarch64-linux-gnu g++-8-aarch64-linux-gnu libc6-dev-arm64-cross libstdc++-8-dev-arm64-cross
+        run: |
+          sudo apt-get install gcc-8-aarch64-linux-gnu g++-8-aarch64-linux-gnu libc6-dev-arm64-cross libstdc++-8-dev-arm64-cross
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
