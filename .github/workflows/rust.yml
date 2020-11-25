@@ -3,7 +3,7 @@ name: Rust
 on: push
 
 env:
-  GITVERSION_VERSION: 5.3.7
+  GITVERSION_VERSION: 5.5.0
   CARGO_TERM_COLOR: always
   DEBIAN_FRONTEND: noninteractive
 
@@ -312,7 +312,7 @@ jobs:
       - name: Setup x86_64-unknown-linux-gnu
         run: | 
           rustup target add x86_64-unknown-linux-gnu --toolchain stable
-          echo "::set-env name=RUST_TARGET::x86_64-unknown-linux-gnu"
+          echo "RUST_TARGET=x86_64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -387,7 +387,7 @@ jobs:
       - name: Setup aarch64-unknown-linux-gnu
         run: | 
           rustup target add aarch64-unknown-linux-gnu --toolchain stable
-          echo "::set-env name=RUST_TARGET::aarch64-unknown-linux-gnu"
+          echo "RUST_TARGET=aarch64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -462,7 +462,7 @@ jobs:
       - name: Setup x86_64-apple-darwin
         run: |
           rustup target add x86_64-apple-darwin --toolchain stable
-          echo "::set-env name=RUST_TARGET::x86_64-apple-darwin"
+          echo "RUST_TARGET=x86_64-apple-darwin" >> $GITHUB_ENV
           
       - name: Cache cargo registry
         uses: actions/cache@v2
