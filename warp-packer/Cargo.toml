@@ -10,7 +10,7 @@ LegalCopyright = "Copyright © 2020 Finter Mobility As"
 [dependencies]
 clap = "2.32.0"
 dirs = "3.0.0"
-reqwest = "0.10.6"
+reqwest = "0.11.0"
 tempdir = "0.3.7"
 flate2 = "1.0"
 tar = "0.4"
