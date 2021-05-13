@@ -210,7 +210,7 @@ jobs:
     
       - name: Setup target
         run: |
-          rustup toolchain install nightly --profile minimal 
+          rustup toolchain install nightly
           rustup target add ${{ env.RUST_TARGET }} --toolchain nightly
         
       - name: Cache cargo registry
