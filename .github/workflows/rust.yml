@@ -3,7 +3,7 @@ name: Rust
 on: push
 
 env:
-  GITVERSION_VERSION: 5.3.7
+  GITVERSION_VERSION: 5.6.9
   CARGO_TERM_COLOR: always
   DEBIAN_FRONTEND: noninteractive
 
@@ -16,7 +16,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ steps.set-version.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.2.0
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
         
@@ -42,13 +42,13 @@ jobs:
         target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -84,13 +84,13 @@ jobs:
         target: [x86_64-unknown-linux-gnu]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -126,13 +126,13 @@ jobs:
         target: [aarch64-unknown-linux-gnu]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -166,13 +166,13 @@ jobs:
       RUST_TARGET: x86_64-apple-darwin
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
     
       - name: Setup target
         run: rustup target add ${{ env.RUST_TARGET }} --toolchain stable
         
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -208,7 +208,7 @@ jobs:
         target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -244,7 +244,7 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
                     
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -277,7 +277,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -312,10 +312,10 @@ jobs:
       - name: Setup x86_64-unknown-linux-gnu
         run: | 
           rustup target add x86_64-unknown-linux-gnu --toolchain stable
-          echo "::set-env name=RUST_TARGET::x86_64-unknown-linux-gnu"
+          echo "RUST_TARGET=x86_64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -352,7 +352,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -387,10 +387,10 @@ jobs:
       - name: Setup aarch64-unknown-linux-gnu
         run: | 
           rustup target add aarch64-unknown-linux-gnu --toolchain stable
-          echo "::set-env name=RUST_TARGET::aarch64-unknown-linux-gnu"
+          echo "RUST_TARGET=aarch64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -427,7 +427,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -462,10 +462,10 @@ jobs:
       - name: Setup x86_64-apple-darwin
         run: |
           rustup target add x86_64-apple-darwin --toolchain stable
-          echo "::set-env name=RUST_TARGET::x86_64-apple-darwin"
+          echo "RUST_TARGET=x86_64-apple-darwin" >> $GITHUB_ENV
           
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.5
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
