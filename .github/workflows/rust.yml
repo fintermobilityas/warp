@@ -3,7 +3,7 @@ name: Rust
 on: push
 
 env:
-  GITVERSION_VERSION: 5.5.0
+  GITVERSION_VERSION: 5.6.9
   CARGO_TERM_COLOR: always
   DEBIAN_FRONTEND: noninteractive
 
