@@ -48,7 +48,7 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -90,7 +90,7 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -132,7 +132,7 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -172,7 +172,7 @@ jobs:
         run: rustup target add ${{ env.RUST_TARGET }} --toolchain stable
         
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -244,7 +244,7 @@ jobs:
         run: rustup target add ${{ matrix.target }} --toolchain stable
                     
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -315,7 +315,7 @@ jobs:
           echo "RUST_TARGET=x86_64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -390,7 +390,7 @@ jobs:
           echo "RUST_TARGET=aarch64-unknown-linux-gnu" >> $GITHUB_ENV
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
@@ -465,7 +465,7 @@ jobs:
           echo "RUST_TARGET=x86_64-apple-darwin" >> $GITHUB_ENV
           
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v2.1.6
         continue-on-error: true
         with:
           path: ~/.cargo/registry/cache
