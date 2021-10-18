@@ -16,7 +16,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ steps.set-version.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
         with:
           fetch-depth: 0
         
@@ -42,7 +42,7 @@ jobs:
         target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
@@ -84,7 +84,7 @@ jobs:
         target: [x86_64-unknown-linux-gnu]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
@@ -126,7 +126,7 @@ jobs:
         target: [aarch64-unknown-linux-gnu]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup target
         run: rustup target add ${{ matrix.target }} --toolchain stable
@@ -166,7 +166,7 @@ jobs:
       RUST_TARGET: x86_64-apple-darwin
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
     
       - name: Setup target
         run: rustup target add ${{ env.RUST_TARGET }} --toolchain stable
@@ -208,7 +208,7 @@ jobs:
         target: [i686-pc-windows-msvc, x86_64-pc-windows-msvc]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -277,7 +277,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -352,7 +352,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
@@ -427,7 +427,7 @@ jobs:
       CARGO_PKG_AUTHORS: ${{ needs.setup.outputs.CARGO_PKG_AUTHORS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download warp runner (i686-pc-windows-msvc)
         uses: actions/download-artifact@v2
