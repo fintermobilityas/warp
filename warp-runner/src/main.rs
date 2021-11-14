@@ -12,22 +12,23 @@ use std::io;
 use std::path::*;
 use std::process;
 
-mod extractor;
 mod executor;
+mod extractor;
 
 static TARGET_FILE_NAME_BUF: &'static [u8] = b"tVQhhsFFlGGD3oWV4lEPST8I8FEPP54IM0q7daes4E1y3p2U2wlJRYmWmjPYfkhZ0PlT14Ls0j8fdDkoj33f2BlRJavLj3mWGibJsGt5uLAtrCDtvxikZ8UX2mQDCrgE\0";
 static TARGET_UID_BUF: &'static [u8] = b"DR1PWsJsM6KxNbng9Y38\0";
 
 fn build_uid() -> &'static str {
-    return read_magic("TARGET_UID_BUF", &TARGET_UID_BUF)
+    return read_magic("TARGET_UID_BUF", &TARGET_UID_BUF);
 }
 
 fn target_file_name() -> &'static str {
-    return read_magic("TARGET_FILE_NAME_BUF", &TARGET_FILE_NAME_BUF)
+    return read_magic("TARGET_FILE_NAME_BUF", &TARGET_FILE_NAME_BUF);
 }
 
 fn read_magic(magic_name: &str, magic: &'static [u8]) -> &'static str {
-    let nul_pos = magic.iter()
+    let nul_pos = magic
+        .iter()
         .position(|elem| *elem == b'\0')
         .expect(&format!("{} has no NUL terminator", magic_name));
 
@@ -39,11 +40,20 @@ fn read_magic(magic_name: &str, magic: &'static [u8]) -> &'static str {
 }
 
 fn cache_path(target: &str) -> PathBuf {
-    dirs::data_local_dir()
-        .expect("No data local dir found")
-        .join("warp")
+    if env::var("WARP_CACHE_DIR").is_err() {
+        dirs::data_local_dir()
+            .expect("No data local dir found")
+            .join("warp")
+            .join("packages")
+            .join(target)
+    } else {
+        PathBuf::from(
+            env::var("WARP_CACHE_DIR")
+                .expect("Invalid local cache path specified in WARP_CACHE_DIR"),
+        )
         .join("packages")
         .join(target)
+    }
 }
 
 fn extract(exe_path: &Path, cache_path: &Path) -> io::Result<()> {
@@ -56,8 +66,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     if env::var("WARP_TRACE").is_ok() {
         simple_logger::init_with_level(Level::Trace)?;
     }
-
-
 
     let build_uid = build_uid();
     let self_path = env::current_exe()?;
