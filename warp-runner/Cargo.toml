@@ -14,7 +14,7 @@ tar = "0.4"
 dirs = "4.0.0"
 winapi = "0.3.6"
 log = "0.4.5"
-simple_logger = "1.0.1"
+simple_logger = "2.3.0"
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.11"
