@@ -8,7 +8,7 @@ build = "build.rs"
 LegalCopyright = "Copyright © 2020 Finter Mobility As"
 
 [dependencies]
-clap = "3.0.1"
+clap = "4.0.16"
 dirs = "4.0.0"
 reqwest = "0.11.0"
 tempdir = "0.3.7"
