@@ -77,7 +77,6 @@ pub fn extract_to(src: &Path, dst: &Path) -> io::Result<()> {
         if extract_at_offset(src, offs, dst).is_ok() {
             trace!("tarball found at offset {} was extracted successfully", offs);
             found = true;
-            break;
         }
     }
 
