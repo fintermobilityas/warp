@@ -545,7 +545,7 @@ jobs:
           strip windows-x64.warp-packer.exe
           
       - name: Create github release tag
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: Release v${{ env.CARGO_PKG_VERSION }}
           tag_name: v${{ env.CARGO_PKG_VERSION }}
