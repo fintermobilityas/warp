@@ -9,6 +9,8 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::Command;
 use std::process::Stdio;
+#[cfg(target_family = "windows")]
+use std::os::windows::process::CommandExt;
 
 pub fn execute(target: &Path) -> io::Result<i32> {
     trace!("target={:?}", target);
@@ -54,13 +56,14 @@ fn do_execute(target: &Path, args: &[String]) -> io::Result<i32> {
     let target_str = target.as_os_str().to_str().unwrap();
 
     if is_script(target) {
-        let mut cmd_args = Vec::with_capacity(args.len() + 2);
-        cmd_args.push("/c".to_string());
-        cmd_args.push(target_str.to_string());
-        cmd_args.extend_from_slice(&args);
-
+        let mut cmd = format!(r#""{target_str}""#);
+        for arg in args {
+            cmd.push_str(&format!(" \"{}\"", arg));
+        }
+        trace!("cmd={:?}", cmd);
         Ok(Command::new("cmd")
-            .args(cmd_args)
+            .arg("/c")
+            .raw_arg(format!("\"{}\"", cmd))
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
